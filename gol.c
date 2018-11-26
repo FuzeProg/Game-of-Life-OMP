@@ -105,6 +105,7 @@ void dump_field(const char *f, int size) {
 
 int main(int argc, char **argv) {
     int i, random, a, b;
+    int compt = 0;
     char *fa, *fb, *tt;
     double start, finish;
     int nthreads = 1;
@@ -139,10 +140,20 @@ int main(int argc, char **argv) {
     start = omp_get_wtime();
 
     for(i = 0; i < ROUNDS; i++){
-        evolve(fa, fb, BOARD_SIZE);
-        tt = fb;
-        fb = fa;
-        fa = tt;
+        if(compt < 2) {
+            evolve(fa, fb, BOARD_SIZE);
+            tt = fb;
+            fb = fa;
+            fa = tt;
+            if(fa == fb ){
+                compt = compt+1;
+            }
+            else
+                compt = 0;
+        } else{
+            printf("Le tablezu n'a pas bouger depuis 2 tours\n");
+            break;
+        }
     }
 
     finish = omp_get_wtime();
