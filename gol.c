@@ -157,10 +157,20 @@ int main(int argc, char **argv) {
     start = omp_get_wtime();
 
     for(i = 0; i < ROUNDS; i++){
-        evolve(fa, fb, BOARD_SIZE);
-        tt = fb;
-        fb = fa;
-        fa = tt;
+        if(compt < 2) {
+            evolve(fa, fb, BOARD_SIZE);
+            tt = fb;
+            fb = fa;
+            fa = tt;
+            if(fa == fb ){
+                compt = compt+1;
+            }
+            else
+                compt = 0;
+        } else{
+            printf("Le tablezu n'a pas bouger depuis 2 tours\n");
+            break;
+        }
     }
 
     finish = omp_get_wtime();
