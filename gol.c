@@ -5,11 +5,11 @@
 // Source OpenMP functions : https://www.openmp.org/wp-content/uploads/OpenMP-4.0-C.pdf
 // Edited by : MARECHAL Anthony - MOZDZIERZ Ombeline
 //
-//
 // Rule 1 : 3 alive cells around a dead one make it alive (she born)
 // Rule 2 : An alive cell which have 2 or 3 alive cells stay alive
 // Rule 3 : An alive cell which have more than 3 alive cells or less than 2 alive cells die
 // Restriction : The game will be stopped if a board is equal to the next 2 times in a row, or when all of the rounds are played.
+//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +30,8 @@
 #define BOARD_SIZE 14
 // Define the number of rounds that will be played
 #define ROUNDS 100000
+// Define the threads number
+#define NBTHREADS 2
 
 /* ------------------- END - DEFINITIONS ------------------- */
 
@@ -59,14 +61,20 @@ int randInRange(unsigned int min, unsigned int max){
 void evolve(const char *field, char *t, int size) {
     unsigned int i, j, alive, cs;
 
-    // i, j, alive and cs will
+    // i, j, alive and cs will be private to a thread
 #pragma omp parallel private (i, j, alive, cs)
     for (i = 0; i < size; i++) {
+
+        /*
+         * Iterations will be executed in parallel from threads.
+         * Basically the iteration variable will be private.
+         */
 #pragma omp for
         for (j = 0; j < size; j++) {
             alive = cpt_alive(field, i, j, size);
             cs = CELL(i, j);
 
+            // Loop that will define if a cell is alive or dead
             if (cs) {
                 if ((alive > 3) || (alive < 2))
                     DEAD(i, j);
@@ -93,6 +101,10 @@ void dump_field(const char *f, int size) {
     for (i = 0; i < (size * size); i++) {
         if ((i % size) == 0)
             printf("\n");
+        /*
+         * Ternary operator
+         * (if) [cond] ? [true] : [false]
+         */
         printf("%c", f[i] ? 'X' : '.');
     }
 
@@ -104,14 +116,20 @@ void dump_field(const char *f, int size) {
 /* ------------------- START - MAIN ------------------- */
 
 int main(int argc, char **argv) {
-    int i, random, a, b;
+
+    // Lambda variables
+    int i;
+    // Board, next board, transitive board
     char *fa, *fb, *tt;
+    // Time at the start and the end of the execution
     double start, finish;
-    int nthreads = 1;
+    // Initialization variables
+    int random, a, b;
 
     srand(time(NULL));
 
-    omp_set_num_threads(nthreads);
+    // Setting up the threads number
+    omp_set_num_threads(NBTHREADS);
 
     char field[BOARD_SIZE * BOARD_SIZE];
     char tmp_field[BOARD_SIZE * BOARD_SIZE];
@@ -133,7 +151,7 @@ int main(int argc, char **argv) {
     fa = field;
     fb = tmp_field;
 
-    printf("Running with %d threads. First gen :\n", omp_get_num_threads());
+    printf("Running with %d threads.\nFirst gen :\n\n", NBTHREADS);
     dump_field(fa, BOARD_SIZE);
 
     start = omp_get_wtime();
@@ -148,7 +166,8 @@ int main(int argc, char **argv) {
     finish = omp_get_wtime();
     printf("DONE. Last gen :\n");
     dump_field(fa, BOARD_SIZE);
-    printf("Elapsed wall clock time = %f seconds.\n", finish - start);
+    printf("\nElapsed wall clock time = %f seconds.\n", finish - start);
+    printf("\nTerminé !\n\n");
 
     return 0;
 
