@@ -29,7 +29,7 @@
 // Define the size of the board
 #define BOARD_SIZE 14
 // Define the number of rounds that will be played
-#define ROUNDS 100000
+#define ROUNDS 10000000
 // Define the threads number
 #define NBTHREADS 2
 
@@ -118,7 +118,7 @@ void dump_field(const char *f, int size) {
 int main(int argc, char **argv) {
 
     // Lambda variables
-    int i;
+    int i, compt;
     // Board, next board, transitive board
     char *fa, *fb, *tt;
     // Time at the start and the end of the execution
@@ -157,10 +157,20 @@ int main(int argc, char **argv) {
     start = omp_get_wtime();
 
     for(i = 0; i < ROUNDS; i++){
-        evolve(fa, fb, BOARD_SIZE);
-        tt = fb;
-        fb = fa;
-        fa = tt;
+        if(compt < 2) {
+            evolve(fa, fb, BOARD_SIZE);
+            tt = fb;
+            fb = fa;
+            fa = tt;
+            if(fa == fb ){
+                compt = compt+1;
+            }
+            else
+                compt = 0;
+        } else{
+            printf("Le tablezu n'a pas bouger depuis 2 tours\n");
+            break;
+        }
     }
 
     finish = omp_get_wtime();
